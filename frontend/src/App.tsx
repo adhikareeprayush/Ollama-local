@@ -6,29 +6,53 @@ const App = () => {
     []
   );
 
+  // const handleSubmit = async (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   if (!prompt.trim()) return;
+
+  //   setMessages((prev) => [...prev, { sender: "user", text: prompt }]);
+  //   setPrompt("");
+
+  //   try {
+  //     const response = await fetch("http://localhost:5000/api/ollama/generate", {
+  //       method: "POST",
+  //       headers: { "Content-Type": "application/json" },
+  //       body: JSON.stringify({ prompt }),
+  //     });
+
+  //     const data = await response.json();
+  //     console.log(data);
+
+  //     // Add bot response (HTML formatted) to chat history
+  //     setMessages((prev) => [...prev, { sender: "bot", text: data }]);
+  //   } catch (error) {
+  //     console.error("Error fetching response:", error);
+  //   }
+  // };
+
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!prompt.trim()) return;
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${import.meta.env.VITE_GEMINI_API_KEY}`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{ text: prompt }]
+        }]
+      }),
+    })
 
-    // Add user message to chat history
-    setMessages((prev) => [...prev, { sender: "user", text: prompt }]);
-    setPrompt("");
+    console.log(import.meta.env.GEMINI_API_KEY);
 
-    try {
-      const response = await fetch("http://localhost:5000/api/ollama/generate", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ prompt }),
-      });
+    const data = await response.json();
 
-      const data = await response.json();
-      console.log(data);
-
-      // Add bot response (HTML formatted) to chat history
-      setMessages((prev) => [...prev, { sender: "bot", text: data }]);
-    } catch (error) {
-      console.error("Error fetching response:", error);
+    if(response.ok) {
+      setMessages((prev) => [...prev, { sender: "user", text: prompt }]);
+      setPrompt("");
+      setMessages((prev) => [...prev, { sender: "bot", text: data.candidates[0].content.parts[0].text }]);
     }
+    console.log(data);
   };
 
   return (
